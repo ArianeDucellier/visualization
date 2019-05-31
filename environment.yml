@@ -1,0 +1,19 @@
+name: tremorviz
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - altair
+  - vega
+  - vega_datasets
+  - bokeh
+  - folium
+  - jupyter
+  - jupyterlab
+  - notebook
+  - geopandas
+  - pandas
+  - python=3.6
+  - matplotlib
+  - numpy
+  - scipy
