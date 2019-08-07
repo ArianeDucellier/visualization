@@ -4,11 +4,8 @@ with the Python package altair
 """
 
 import altair as alt
-import geopandas as gpd
 import numpy as np
 import pandas as pd
-
-from shapely.geometry import Polygon
 
 def select_tremor(tremors, tbegin, tend, \
     latmin, latmax, lonmin, lonmax):
@@ -83,33 +80,6 @@ def bin_tremor(tremors, nbin, winlen):
         df_group.sort_values(by="Time"), left_on="datetime", right_on="Time")
     return dfInterp
 
-def read_background(filename, latmin, latmax, lonmin, lonmax):
-    """
-    Get a geodataframe with a background map
-
-    Input:
-        type filename = string
-        filename = Shape file with background map
-        type latmin = float
-        latmin = Southern boundary of the map
-        type latmax = float
-        latmax = Northern boundary of the map
-        type lonmin = float
-        lonmin = Western boundary of the map
-        type lonmax = float
-        lonmax = Eastern boundary of the map
-    Output:
-        type subdata = geopandas dataframe
-        subdata = background map
-    """
-    data = gpd.read_file(filename)
-    data.rename(columns={'id' : 'id0'}, inplace=True)
-    limits = gpd.GeoSeries([Polygon([(lonmin, latmin), (lonmax, latmin), \
-        (lonmax, latmax), (lonmin, latmax)])])
-    boundaries = gpd.GeoDataFrame({'geometry': limits, 'df':[1]}, crs=data.crs)
-    subdata = gpd.overlay(data, boundaries, how='intersection')
-    return subdata
-
 def plot_tremor(tremors):
     """
     Plot tremor location and tremor activity
@@ -155,64 +125,7 @@ def plot_tremor(tremors):
     myChart = alt.vconcat(points, bars, data=tremors)
     return myChart
 
-def plot_tremor_withbg(tremors, subdata):
-    """
-    Plot tremor location and tremor activity
-    with interaction between both graphs and a background map
-
-    Input:
-        type tremors = pandas dataframe
-        tremors = {datetime, latitude, longitude, depth, Time, Value}
-        type subdata = geopandas dataframe
-        subdata = Background map
-    Output:
-        type myChart = Altair chart
-        myChart = tremor plot
-    """
-    # Selection
-    brush = alt.selection(type='interval', encodings=['x'])
-    # Background map
-    bgmap = alt.Chart(subdata).mark_geoshape(
-    ).project(
-    ).encode(
-        color=alt.value('white')
-    ).properties(
-    )
-    # Map of tremor location
-    points = alt.Chart(tremors
-    ).mark_point(
-    ).encode(
-        longitude = 'longitude',
-        latitude = 'latitude',
-        color=alt.Color('Time', \
-                        legend=alt.Legend(format='%Y/%m/%d - %H:%M:%S'))
-    )
-    # Add background map to tremor location
-    bgpoints = alt.layer(bgmap, points
-    ).transform_filter(
-        brush.ref()
-    ).properties(
-        width=600,
-        height=600
-    )
-    # Graph of tremor activity
-    bars = alt.Chart(tremors
-    ).mark_area(
-    ).encode(
-        x=alt.X('Time', \
-                axis=alt.Axis(format='%Y/%m/%d - %H:%M:%S', title='Time')),
-        y=alt.Y('Value', \
-                axis=alt.Axis(format='%', title='Percentage of tremor'))
-    ).properties(
-        width=600,
-        height=100,
-        selection=brush
-    )
-    # Putting graphs together
-    myChart = alt.vconcat(bgpoints, bars).configure(background='lightblue')
-    return myChart
-
-def visualize_tremor(filename, output, nbin, bg=False, winlen=1.0, \
+def visualize_tremor(filename, output, nbin, winlen=1.0, \
     tbegin=None, tend=None, \
     latmin=None, latmax=None, lonmin=None, lonmax=None):
     """
@@ -223,8 +136,6 @@ def visualize_tremor(filename, output, nbin, bg=False, winlen=1.0, \
         filename = Pickle file where tremor dataset is stored
         type output = string
         output = Name of output file containing the figure
-        type bg = boolean
-        bg = Do we add a background map?
         type nbin = integer
         nbin = Duration of the time windows (in minutes) for which we compute
             the percentage of time with tremor
@@ -255,15 +166,8 @@ def visualize_tremor(filename, output, nbin, bg=False, winlen=1.0, \
     tremors = bin_tremor(tremors, nbin, winlen)
     # Manage big datasets
     alt.data_transformers.enable('json')
-    # Background map
-    if (bg == True):
-        subdata = read_background('../data/WA_BC_Plus_shoreline.shp', \
-            tremors['latitude'].min(), tremors['latitude'].max(), \
-            tremors['longitude'].min(), tremors['longitude'].max())
-        myChart = plot_tremor_withbg(tremors, subdata)
-    else:        
-        # Plot
-        myChart = plot_tremor(tremors)
+    # Plot
+    myChart = plot_tremor(tremors)
     # Save
     myChart.save(output + '.html')
 
@@ -273,7 +177,6 @@ if __name__ == '__main__':
     output = 'tremor'
     winlen = 1.0
     nbin =  1440
-    bg = False
-    visualize_tremor(filename, output, nbin, bg, winlen, \
+    visualize_tremor(filename, output, nbin, winlen, \
         tbegin=None, tend=None, \
         latmin=None, latmax=None, lonmin=None, lonmax=None)
