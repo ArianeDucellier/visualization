@@ -169,7 +169,7 @@ def visualize_tremor(filename, output, nbin, winlen=1.0, \
     # Plot
     myChart = plot_tremor(tremors)
     # Save
-    myChart.save(output + '.html')
+    return myChart
 
 if __name__ == '__main__':
 
@@ -177,6 +177,7 @@ if __name__ == '__main__':
     output = 'tremor'
     winlen = 1.0
     nbin =  1440
-    visualize_tremor(filename, output, nbin, winlen, \
+    myChart = visualize_tremor(filename, output, nbin, winlen, \
         tbegin=None, tend=None, \
         latmin=None, latmax=None, lonmin=None, lonmax=None)
+    myChart.save(output + '.html')
