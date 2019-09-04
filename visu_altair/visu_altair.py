@@ -15,9 +15,9 @@ def select_tremor(tremors, tbegin, tend, \
     Input:
         type tremors = pandas dataframe
         tremors = {datetime, latitude, longitude, depth}
-        type tbegin = datatime.datetime
+        type tbegin = datetime.datetime
         tbegin = Beginning of selected time interval
-        type tend = datatime.datetime
+        type tend = datetime.datetime
         tend = End of selected time interval
         type latmin = float
         latmin = Southern boundary of selected region
@@ -125,17 +125,15 @@ def plot_tremor(tremors):
     myChart = alt.vconcat(points, bars, data=tremors)
     return myChart
 
-def visualize_tremor(filename, output, nbin, winlen=1.0, \
+def visualize_tremor(tremors, nbin, winlen=1.0, \
     tbegin=None, tend=None, \
     latmin=None, latmax=None, lonmin=None, lonmax=None):
     """
     Read and plot tremor location and activity
 
     Input:
-        type filename = string
-        filename = Pickle file where tremor dataset is stored
-        type output = string
-        output = Name of output file containing the figure
+        type tremors = pandas DataFrame
+        tremors = Catalog of tremor locations
         type nbin = integer
         nbin = Duration of the time windows (in minutes) for which we compute
             the percentage of time with tremor
@@ -157,15 +155,11 @@ def visualize_tremor(filename, output, nbin, winlen=1.0, \
     Output:
         None
     """
-    # Read dataset
-    tremors = pd.read_pickle(filename)[0]
     # Select tremors
     tremors = select_tremor(tremors, tbegin, tend, \
         latmin, latmax, lonmin, lonmax)
     # Construct time line for selection
     tremors = bin_tremor(tremors, nbin, winlen)
-    # Manage big datasets
-    alt.data_transformers.enable('json')
     # Plot
     myChart = plot_tremor(tremors)
     # Save
@@ -173,11 +167,11 @@ def visualize_tremor(filename, output, nbin, winlen=1.0, \
 
 if __name__ == '__main__':
 
-    filename = '../data/tremor.pkl'
-    output = 'tremor'
+    tremors = pd.read_pickle(filename)[0]
+    subset = tremors.sample(frac=0.2)
     winlen = 1.0
     nbin =  1440
-    myChart = visualize_tremor(filename, output, nbin, winlen, \
+    myChart = visualize_tremor(subset, nbin, winlen, \
         tbegin=None, tend=None, \
         latmin=None, latmax=None, lonmin=None, lonmax=None)
     myChart.save(output + '.html')
