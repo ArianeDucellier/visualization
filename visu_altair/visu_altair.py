@@ -7,8 +7,7 @@ import altair as alt
 import numpy as np
 import pandas as pd
 
-def select_tremor(tremors, tbegin, tend, \
-    latmin, latmax, lonmin, lonmax):
+def select_tremor(tremors, tbegin, tend, latmin, latmax, lonmin, lonmax):
     """
     Select tremor within user-defined area and time range
 
@@ -100,8 +99,8 @@ def plot_tremor(tremors):
     ).encode(
         longitude = 'longitude',
         latitude = 'latitude',
-        color=alt.Color('Time', \
-                        legend=alt.Legend(format='%Y/%m/%d - %H:%M:%S'))
+        color=alt.Color('Time', scale=alt.Scale(scheme='rainbow'), \
+            legend=alt.Legend(format='%Y/%m/%d - %H:%M:%S'))
     ).transform_filter(
         brush.ref()
     ).properties(
@@ -113,9 +112,9 @@ def plot_tremor(tremors):
     ).mark_area(
     ).encode(
         x=alt.X('Time', \
-                axis=alt.Axis(format='%Y/%m/%d - %H:%M:%S', title='Time')),
+            axis=alt.Axis(format='%Y/%m/%d - %H:%M:%S', title='Time')),
         y=alt.Y('Value', \
-                axis=alt.Axis(format='%', title='Percentage of tremor'))
+            axis=alt.Axis(format='%', title='Percentage of tremor'))
     ).properties(
         width=600,
         height=100,
@@ -125,8 +124,7 @@ def plot_tremor(tremors):
     myChart = alt.vconcat(points, bars, data=tremors)
     return myChart
 
-def visualize_tremor(tremors, nbin, winlen=1.0, \
-    tbegin=None, tend=None, \
+def visualize_tremor(tremors, nbin, winlen=1.0, tbegin=None, tend=None, \
     latmin=None, latmax=None, lonmin=None, lonmax=None):
     """
     Read and plot tremor location and activity
@@ -167,11 +165,10 @@ def visualize_tremor(tremors, nbin, winlen=1.0, \
 
 if __name__ == '__main__':
 
-    tremors = pd.read_pickle(filename)[0]
+    tremors = pd.read_pickle('../data/tremor.pkl')[0]
     subset = tremors.sample(frac=0.2)
     winlen = 1.0
     nbin =  1440
-    myChart = visualize_tremor(subset, nbin, winlen, \
-        tbegin=None, tend=None, \
+    myChart = visualize_tremor(subset, nbin, winlen, tbegin=None, tend=None, \
         latmin=None, latmax=None, lonmin=None, lonmax=None)
-    myChart.save(output + '.html')
+    myChart.save('tremors.html')
